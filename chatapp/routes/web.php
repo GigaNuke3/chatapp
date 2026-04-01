@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MessageController;
+use App\Models\User;
+use App\Models\Message;
 
 //Login Routes 
 Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
@@ -15,6 +17,34 @@ Route::get('/dashboard', function () {
 })->middleware('auth')->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/messages/{user}', [MessageController::class, 'index']);
-    Route::post('/messages', [MessageController::class, 'send']);
+    // Chat pages
+    Route::get('/chat', function () {
+        $users = User::where('id', '!=', auth()->id())->get();
+        return view('chat', compact('users'));
+    })->name('chat.index');
+
+    Route::get('/chat/{user}', function (User $user) {
+        // Prevent user from viewing their own chat
+        if ($user->id == auth()->id()) {
+            return redirect()->route('chat.index');
+        }
+
+        $users = User::where('id', '!=', auth()->id())->get();
+        $messages = Message::where(function ($q) use ($user) {
+                $q->where('sender_id', auth()->id())
+                  ->where('receiver_id', $user->id);
+            })
+            ->orWhere(function ($q) use ($user) {
+                $q->where('sender_id', $user->id)
+                  ->where('receiver_id', auth()->id());
+            })
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return view('chat-show', compact('users', 'user', 'messages'));
+    })->name('chat.show');
+
+    // API routes for messages
+    Route::post('/api/messages', [MessageController::class, 'send'])->name('message.send');
+    Route::get('/api/messages/{user}', [MessageController::class, 'getMessages'])->name('message.get');
 });
