@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\MessageController;
 
 //Login Routes 
 Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
@@ -12,3 +13,8 @@ Route::post('/register', [App\Http\Controllers\Auth\RegisterController::class, '
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware('auth')->name('dashboard');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/messages/{user}', [MessageController::class, 'index']);
+    Route::post('/messages', [MessageController::class, 'send']);
+});
