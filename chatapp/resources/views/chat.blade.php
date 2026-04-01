@@ -3,38 +3,154 @@
 @section('title', 'Chat')
 
 @section('content')
-<div class="container-fluid" style="background-color: #1a1a1a; height: 100vh;">
-    <div class="row" style="height: 100vh;">
-        <!-- Users List -->
-        <div class="col-md-3" style="background-color: #2d2d2d; border-right: 1px solid #444; overflow-y: auto;">
-            <div class="p-3">
-                <h5 style="color: #fff;">Users</h5>
-                <div class="list-group">
-                    @forelse($users as $user)
-                        <a href="{{ route('chat.show', $user->id) }}" 
-                           class="list-group-item list-group-item-action"
-                           style="background-color: #3d3d3d; color: #fff; border: none; margin-bottom: 5px; border-radius: 5px;">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">{{ $user->name }}</h6>
-                            </div>
-                            <p class="mb-1" style="color: #ccc;">{{ $user->email }}</p>
-                        </a>
-                    @empty
-                        <p style="color: #999;">No users available</p>
-                    @endforelse
-                </div>
+<div class="chat-container">
+    <!-- Sidebar - Users List -->
+    <div class="chat-sidebar">
+        <!-- Sidebar Header -->
+        <div class="sidebar-header">
+            <h5>
+                <i class="fas fa-comments"></i>
+                Messages
+            </h5>
+        </div>
+
+        <!-- Search Box -->
+        <div class="search-box">
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" class="form-control search-users" id="searchUsers" placeholder="Search users...">
             </div>
         </div>
 
-        <!-- Chat Area -->
-        <div class="col-md-9 d-flex flex-column" style="background-color: #1a1a1a;">
-            <div style="background-color: #2d2d2d; padding: 1rem; border-bottom: 1px solid #444; text-align: center;">
-                <h5 style="color: #fff; margin: 0;">Select a user to start chatting</h5>
-            </div>
-            <div class="flex-grow-1 p-3" style="overflow-y: auto;">
-                <p style="color: #999; text-align: center;">Choose a user from the list to begin</p>
-            </div>
+        <!-- Users List -->
+        <div class="users-list">
+            @forelse($users as $user)
+                <a href="{{ route('chat.show', $user->id) }}" 
+                   class="user-item {{ request()->route('user') && request()->route('user')->id == $user->id ? 'active' : '' }}"
+                   data-user-name="{{ $user->name }}">
+                    
+                    <div class="avatar-container">
+                        @if($user->avatar)
+                            <img src="{{ asset('storage/' . $user->avatar) }}" alt="{{ $user->name }}" class="avatar-container img">
+                        @else
+                            <div class="avatar-placeholder">
+                                {{ substr($user->name, 0, 1) }}
+                            </div>
+                        @endif
+                        <div class="avatar-status"></div>
+                    </div>
+
+                    <div class="user-info">
+                        <h6>{{ $user->name }}</h6>
+                        <p>Active now</p>
+                    </div>
+                </a>
+            @empty
+                <div class="no-users-container">
+                    <i class="fas fa-users"></i>
+                    <p>No users available</p>
+                </div>
+            @endforelse
         </div>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="chat-main">
+        @if(Route::is('chat.show'))
+            <!-- Chat Header -->
+            <div class="chat-header">
+                <div class="chat-header-user">
+                    @if($user->avatar)
+                        <img src="{{ asset('storage/' . $user->avatar) }}" alt="{{ $user->name }}">
+                    @else
+                        <div class="avatar-placeholder">
+                            {{ substr($user->name, 0, 1) }}
+                        </div>
+                    @endif
+                    <div class="chat-header-user-info">
+                        <h5>{{ $user->name }}</h5>
+                        <p>
+                            <i class="fas fa-circle status-indicator"></i>
+                            Active now
+                        </p>
+                    </div>
+                </div>
+                <div class="chat-header-actions">
+                    <button class="action-btn" title="Call">
+                        <i class="fas fa-phone"></i>
+                    </button>
+                    <button class="action-btn" title="Video Call">
+                        <i class="fas fa-video"></i>
+                    </button>
+                    <button class="action-btn" title="Info">
+                        <i class="fas fa-info-circle"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Messages Area -->
+            <div class="messages-container" id="messagesContainer">
+                @forelse($messages as $message)
+                    <div class="message-row {{ $message->sender_id == auth()->id() ? 'sent' : 'received' }}">
+                        <div class="message-wrapper {{ $message->sender_id == auth()->id() ? 'sent' : '' }}">
+                            @if($message->sender_id != auth()->id())
+                                @if($message->sender->avatar)
+                                    <img src="{{ asset('storage/' . $message->sender->avatar) }}" alt="{{ $message->sender->name }}" class="message-sender-avatar">
+                                @else
+                                    <div class="message-sender-placeholder">
+                                        {{ substr($message->sender->name, 0, 1) }}
+                                    </div>
+                                @endif
+                            @endif
+                            
+                            <div class="message-content {{ $message->sender_id == auth()->id() ? 'sent' : 'received' }}">
+                                <div class="message-bubble {{ $message->sender_id == auth()->id() ? 'sent' : 'received' }}">
+                                    {{ $message->body }}
+                                </div>
+                                <div class="message-time">
+                                    {{ $message->created_at->format('H:i') }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="empty-messages">
+                        <i class="fas fa-comments"></i>
+                        <p style="font-size: 16px;">No messages yet</p>
+                        <p style="font-size: 12px;">Start a conversation with {{ $user->name }}</p>
+                    </div>
+                @endforelse
+            </div>
+
+            <!-- Message Input Form -->
+            <div class="message-input-area">
+                <form id="messageForm">
+                    @csrf
+                    <input type="hidden" name="receiver_id" value="{{ $user->id }}">
+                    
+                    <div class="message-input-wrapper">
+                        <input type="text" id="messageInput" name="body" placeholder="Type a message..." autocomplete="off">
+                        
+                        <button type="button" class="action-btn" title="Attach file">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary send-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        @else
+            <!-- Empty State -->
+            <div class="empty-state">
+                <i class="fas fa-comments"></i>
+                <h4>Select a conversation</h4>
+                <p>Choose a user from the sidebar to start chatting</p>
+            </div>
+        @endif
     </div>
 </div>
 @endsection

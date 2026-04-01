@@ -19,7 +19,7 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('register') }}">
+                    <form method="POST" action="{{ route('register') }}" enctype="multipart/form-data">
                         @csrf
 
                         <div class="mb-3">
@@ -30,6 +30,12 @@
                         <div class="mb-3">
                             <label for="email" style="color: #ccc;">Email Address</label>
                             <input id="email" type="email" class="form-control" name="email" value="{{ old('email') }}" required style="background-color: #3d3d3d; color: #fff; border: 1px solid #555;">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="avatar" style="color: #ccc;">Profile Photo (Optional)</label>
+                            <input id="avatar" type="file" class="form-control" name="avatar" accept="image/*" style="background-color: #3d3d3d; color: #fff; border: 1px solid #555;">
+                            <small style="color: #999;">Accepted formats: JPEG, PNG, JPG, GIF (Max 2MB)</small>
                         </div>
 
                         <div class="mb-3">

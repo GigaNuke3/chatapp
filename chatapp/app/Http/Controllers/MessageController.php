@@ -78,4 +78,32 @@ class MessageController extends Controller
 
         return response()->json($messages);
     }
+
+    // Delete a single message
+    public function destroy(Message $message)
+    {
+        // Only the sender can delete their own message
+        if ($message->sender_id != auth()->id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $message->delete();
+        return response()->json(['success' => true]);
+    }
+
+    // Batch delete multiple messages
+    public function batchDelete(Request $request)
+    {
+        $request->validate([
+            'message_ids' => 'required|array',
+            'message_ids.*' => 'integer|exists:messages,id',
+        ]);
+
+        // Delete only messages that belong to the authenticated user
+        Message::whereIn('id', $request->message_ids)
+                ->where('sender_id', auth()->id())
+                ->delete();
+
+        return response()->json(['success' => true]);
+    }
 }

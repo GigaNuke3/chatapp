@@ -6,6 +6,7 @@
     <title>ChatApp - @yield('title')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         body {
             background-color: #1a1a1a;
@@ -60,8 +61,8 @@
         }
     </style>
 </head>
-<body style="background-color: #1a1a1a;">
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #2d2d2d;">
+<body style="background-color: #1a1a1a; margin: 0; padding: 0;">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #2d2d2d; flex-shrink: 0;">
         <div class="container-fluid">
             <a class="navbar-brand" href="/" style="color: #fff;">ChatApp</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -92,7 +93,7 @@
         </div>
     </nav>
 
-    <main class="py-4" style="background-color: #1a1a1a; min-height: 100vh;">
+    <main class="py-4" style="background-color: #1a1a1a; min-height: 100vh; flex: 1;">
         @yield('content')
     </main>
 

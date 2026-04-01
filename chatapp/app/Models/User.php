@@ -14,6 +14,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'avatar',
     ];
 
     protected $hidden = [
@@ -38,5 +39,24 @@ class User extends Authenticatable
     public function receivedMessages()
     {
         return $this->hasMany(Message::class, 'receiver_id');
+    }
+
+    /**
+     * Get the avatar URL
+     */
+    public function getAvatarUrl()
+    {
+        if ($this->avatar) {
+            return asset('storage/' . $this->avatar);
+        }
+        return null;
+    }
+
+    /**
+     * Get the first letter of the name for initials circle
+     */
+    public function getInitial()
+    {
+        return strtoupper(substr($this->name, 0, 1));
     }
 }

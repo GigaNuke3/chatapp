@@ -38,6 +38,7 @@ Route::middleware('auth')->group(function () {
                 $q->where('sender_id', $user->id)
                   ->where('receiver_id', auth()->id());
             })
+            ->with('sender', 'receiver')
             ->orderBy('created_at', 'asc')
             ->get();
 
@@ -47,4 +48,6 @@ Route::middleware('auth')->group(function () {
     // API routes for messages
     Route::post('/api/messages', [MessageController::class, 'send'])->name('message.send');
     Route::get('/api/messages/{user}', [MessageController::class, 'getMessages'])->name('message.get');
+    Route::post('/api/messages/{message}/delete', [MessageController::class, 'destroy'])->name('message.destroy');
+    Route::post('/api/messages/batch-delete', [MessageController::class, 'batchDelete'])->name('message.batch-delete');
 });
