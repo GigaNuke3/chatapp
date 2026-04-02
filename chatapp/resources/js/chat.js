@@ -14,6 +14,7 @@ function initializeChat() {
     autoScrollMessages();
     setupMessageForm();
     setupUserSearch();
+    setupAttachmentButton();
 }
 
 /**
@@ -44,28 +45,46 @@ async function handleMessageSubmit(e) {
     e.preventDefault();
 
     const messageInput = document.getElementById('messageInput');
+    const fileInput = document.getElementById('fileInput');
     const message = messageInput.value.trim();
+    const hasFiles = fileInput && fileInput.files.length > 0;
 
-    if (!message) return;
+    // Only files are being sent, no text message
+    if (!message && !hasFiles) return;
 
     try {
         const csrfToken = document.querySelector('input[name="_token"]').value;
         const receiverId = document.querySelector('input[name="receiver_id"]').value;
 
+        // Use FormData to support file uploads
+        const formData = new FormData();
+        formData.append('receiver_id', receiverId);
+        // Only append body if there's actual message text (not just file indicator)
+        if (message) {
+            formData.append('body', message);
+        }
+        
+        // Add files if any
+        if (fileInput && fileInput.files.length > 0) {
+            for (let file of fileInput.files) {
+                formData.append('attachments[]', file);
+            }
+        }
+
         const response = await fetch(route('message.send'), {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': csrfToken
             },
-            body: JSON.stringify({
-                receiver_id: receiverId,
-                body: message
-            })
+            body: formData
         });
 
         if (response.ok) {
             messageInput.value = '';
+            messageInput.placeholder = 'Type a message...';
+            messageInput.dataset.hasFiles = 'false';
+            messageInput.dataset.fileCount = '0';
+            if (fileInput) fileInput.value = '';
             messageInput.focus();
             // Reload to show new message in the list
             window.location.reload();
@@ -87,6 +106,44 @@ function setupUserSearch() {
     if (!searchInput) return;
 
     searchInput.addEventListener('keyup', handleUserSearch);
+}
+
+/**
+ * Setup attachment button functionality
+ */
+function setupAttachmentButton() {
+    const attachmentBtn = document.getElementById('attachmentBtn');
+    const fileInput = document.getElementById('fileInput');
+    
+    if (!attachmentBtn || !fileInput) return;
+    
+    attachmentBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        fileInput.click();
+    });
+    
+    fileInput.addEventListener('change', handleFileSelection);
+}
+
+/**
+ * Handle file selection from input
+ * @param {Event} event - Change event from file input
+ */
+function handleFileSelection(event) {
+    const files = event.target.files;
+    if (files.length === 0) return;
+    
+    const messageInput = document.getElementById('messageInput');
+    const fileCount = files.length;
+    
+    // Set a data attribute to track files without modifying the input value
+    messageInput.dataset.hasFiles = 'true';
+    messageInput.dataset.fileCount = fileCount;
+    
+    // Show visual indicator in placeholder or as a separate label
+    messageInput.placeholder = `${fileCount} file${fileCount > 1 ? 's' : ''} selected - type your message (optional)`;
+    
+    messageInput.focus();
 }
 
 /**

@@ -106,9 +106,32 @@
                             @endif
                             
                             <div class="message-content {{ $message->sender_id == auth()->id() ? 'sent' : 'received' }}">
-                                <div class="message-bubble {{ $message->sender_id == auth()->id() ? 'sent' : 'received' }}">
-                                    {{ $message->body }}
-                                </div>
+                                @php
+                                    $attachments = $message->attachment ? json_decode($message->attachment, true) : [];
+                                    $imageCount = count($attachments);
+                                @endphp
+                                
+                                @if($message->body)
+                                    <div class="message-bubble {{ $message->sender_id == auth()->id() ? 'sent' : 'received' }}">
+                                        {{ $message->body }}
+                                    </div>
+                                @endif
+                                
+                                @if($attachments)
+                                    <div class="message-attachments {{ $message->sender_id == auth()->id() ? 'sent' : 'received' }} {{ $imageCount > 1 ? 'grid-' . min($imageCount, 4) : '' }}">
+                                        @foreach($attachments as $attachment)
+                                            <div class="attachment-image-wrapper">
+                                                <img src="{{ asset('storage/' . $attachment) }}" alt="Shared image" class="attachment-image" loading="lazy">
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    @if($imageCount > 1)
+                                        <div class="image-count-label">
+                                            {{ $imageCount }} images
+                                        </div>
+                                    @endif
+                                @endif
+                                
                                 <div class="message-time">
                                     {{ $message->created_at->format('H:i') }}
                                 </div>
@@ -133,7 +156,8 @@
                     <div class="message-input-wrapper">
                         <input type="text" id="messageInput" name="body" placeholder="Type a message..." autocomplete="off">
                         
-                        <button type="button" class="action-btn" title="Attach file">
+                        <input type="file" id="fileInput" style="display: none;" multiple accept="image/*">
+                        <button type="button" class="action-btn" id="attachmentBtn" title="Attach file">
                             <i class="fas fa-paperclip"></i>
                         </button>
                     </div>

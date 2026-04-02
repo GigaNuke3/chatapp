@@ -37,7 +37,7 @@ class MessageController extends Controller
         $message = Message::create([
             'sender_id'   => auth()->id(),
             'receiver_id' => $request->receiver_id,
-            'body'        => $request->body ?: (count($attachments) > 0 ? 'Sent ' . count($attachments) . ' image' . (count($attachments) > 1 ? 's' : '') : ''),
+            'body'        => $request->body ?: null,
             'attachment'  => $attachmentData,
             'is_read'     => false,
         ]);
