@@ -112,9 +112,7 @@
                                 @endphp
                                 
                                 @if($message->body)
-                                    <div class="message-bubble {{ $message->sender_id == auth()->id() ? 'sent' : 'received' }}">
-                                        {{ $message->body }}
-                                    </div>
+                                    <div class="message-bubble {{ $message->sender_id == auth()->id() ? 'sent' : 'received' }}">{{ trim($message->body) }}</div>
                                 @endif
                                 
                                 @if($attachments)

@@ -61,7 +61,8 @@
         }
     </style>
 </head>
-<body style="background-color: #1a1a1a; margin: 0; padding: 0;">
+@php($isChatPage = request()->routeIs('chat*'))
+<body class="{{ $isChatPage ? 'chat-layout' : '' }}" style="background-color: #1a1a1a; margin: 0; padding: 0;">
     <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #2d2d2d; flex-shrink: 0;">
         <div class="container-fluid">
             <a class="navbar-brand" href="/" style="color: #fff;">ChatApp</a>
@@ -93,7 +94,7 @@
         </div>
     </nav>
 
-    <main class="py-4" style="background-color: #1a1a1a; min-height: 100vh; flex: 1;">
+    <main class="{{ $isChatPage ? 'chat-main-shell' : 'py-4' }}" style="background-color: #1a1a1a; flex: 1;">
         @yield('content')
     </main>
 
