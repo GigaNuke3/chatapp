@@ -26,7 +26,7 @@ class RegisterController extends Controller
         // Handle avatar upload
         $avatarPath = null;
         if ($request->hasFile('avatar')) {
-            $avatarPath = $request->file('avatar')->store('avatars', 'public');
+            $avatarPath = $request->file('avatar')->store('user_avatars', 'public');
         }
 
         $user = User::create([

@@ -153,7 +153,7 @@
                     
                     <div class="message-input-wrapper">
                         <input type="text" id="messageInput" name="body" placeholder="Type a message..." autocomplete="off">
-                        
+
                         <input type="file" id="fileInput" style="display: none;" multiple accept="image/*">
                         <button type="button" class="action-btn" id="attachmentBtn" title="Attach media">
                             <i class="fas fa-photo-film"></i>
