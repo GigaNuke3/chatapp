@@ -552,12 +552,14 @@ body.chat-layout {
 #messageForm {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     gap: 10px;
     align-items: flex-end;
 }
 
 .message-input-wrapper {
-    flex: 1;
+    flex: 1 1 100%;
+    min-width: 0;
     display: flex;
     flex-direction: row;
     gap: 10px;
@@ -714,6 +716,7 @@ body.chat-layout {
     justify-content: center;
     gap: 8px;
     font-size: 16px;
+    margin-left: auto;
 }
 
 .send-btn:hover {
@@ -738,26 +741,34 @@ body.chat-layout {
 /* ===== IMAGE PREVIEW ===== */
 #preview-container {
     display: none;
-    margin-top: 12px;
+    flex: 1 1 100%;
+    width: 100%;
+    margin-top: 2px;
     padding: 12px;
     background-color: #1a1a1a;
-    border-radius: 6px;
+    border-radius: 12px;
     border: 1px solid #444;
-    overflow-x: auto;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 #preview-images {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
     gap: 10px;
-    flex-wrap: wrap;
+    width: 100%;
 }
 
 .preview-item {
     position: relative;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: 12px;
+    background-color: #222;
 }
 
 .clear-attachments-btn {
-    margin-top: 10px;
+    margin-top: 12px;
     background-color: #dc3545;
     color: #fff;
     border: none;
@@ -773,9 +784,11 @@ body.chat-layout {
 }
 
 .preview-image {
-    max-height: 80px;
-    border-radius: 4px;
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
     object-fit: cover;
+    display: block;
 }
 
 .remove-preview-btn {

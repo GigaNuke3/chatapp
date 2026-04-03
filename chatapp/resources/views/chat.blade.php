@@ -58,7 +58,7 @@
 
     <!-- Chat Area -->
     <div class="chat-main">
-        @if(Route::is('chat.show'))
+        @if(request()->routeIs('chat.show'))
             <!-- Chat Header -->
             <div class="chat-header">
                 <div class="chat-header-user">
@@ -155,9 +155,14 @@
                         <input type="text" id="messageInput" name="body" placeholder="Type a message..." autocomplete="off">
                         
                         <input type="file" id="fileInput" style="display: none;" multiple accept="image/*">
-                        <button type="button" class="action-btn" id="attachmentBtn" title="Attach file">
-                            <i class="fas fa-paperclip"></i>
+                        <button type="button" class="action-btn" id="attachmentBtn" title="Attach media">
+                            <i class="fas fa-photo-film"></i>
                         </button>
+                    </div>
+
+                    <div id="preview-container" aria-live="polite">
+                        <div id="preview-images"></div>
+                        <button type="button" class="clear-attachments-btn" id="clearAttachmentsBtn">Clear selected media</button>
                     </div>
                     
                     <button type="submit" class="btn btn-primary send-btn">
