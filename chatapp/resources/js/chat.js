@@ -20,12 +20,43 @@ let messageLightboxState = {
  * Initialize all chat functionality
  */
 function initializeChat() {
+    localizeMessageTimes();
     autoScrollMessages();
     setupMessageForm();
     setupUserSearch();
     setupAttachmentButton();
     setupAttachmentPreviewControls();
     setupMessageImageLightbox();
+}
+
+/**
+ * Format message times in the viewer's local timezone automatically
+ */
+function localizeMessageTimes() {
+    const messageTimes = document.querySelectorAll('.message-time[data-utc-time]');
+    if (messageTimes.length === 0) return;
+
+    const timeFormatter = new Intl.DateTimeFormat(undefined, {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+    });
+
+    const tooltipFormatter = new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+    });
+
+    messageTimes.forEach((element) => {
+        const utcTime = element.dataset.utcTime;
+        if (!utcTime) return;
+
+        const parsedDate = new Date(utcTime);
+        if (Number.isNaN(parsedDate.getTime())) return;
+
+        element.textContent = timeFormatter.format(parsedDate);
+        element.title = tooltipFormatter.format(parsedDate);
+    });
 }
 
 /**

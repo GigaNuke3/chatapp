@@ -130,8 +130,8 @@
                                 @endif
                             @endif
                             
-                            <div class="message-time">
-                                {{ $message->created_at->format('H:i') }}
+                            <div class="message-time" data-utc-time="{{ $message->created_at->utc()->toIso8601String() }}">
+                                {{ $message->created_at->format('g:i A') }}
                             </div>
                         </div>
                     </div>
