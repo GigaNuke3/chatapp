@@ -370,13 +370,14 @@ body.chat-layout {
 }
 
 .message-wrapper {
-    max-width: min(65%, 420px);
+    max-width: 100%;
     width: max-content;
     display: flex;
     gap: 10px;
     align-items: flex-end;
     position: relative;
     min-width: 0;
+    overflow: hidden;
 }
 
 .message-wrapper.sent {
@@ -412,9 +413,10 @@ body.chat-layout {
 }
 
 .message-content {
-    display: block;
-    width: max-content;
-    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    width: auto;
+    max-width: min(100%, 420px);
     overflow: hidden;
     min-width: 0;
 }
@@ -461,24 +463,17 @@ body.chat-layout {
 
 /* Message Attachments (Images) */
 .message-attachments {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
     gap: 8px;
-    flex-wrap: wrap;
     margin-top: 10px;
     max-width: 100%;
-    width: max-content;
+    width: 100%;
+    overflow: hidden;
 }
 
-.message-attachments.grid-2 {
-    max-width: 360px;
-}
-
-.message-attachments.grid-3 {
-    max-width: 440px;
-}
-
-.message-attachments.grid-4 {
-    max-width: 520px;
+.message-attachments.multi-image {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .attachment-image-wrapper {
@@ -486,12 +481,14 @@ body.chat-layout {
     overflow: hidden;
     border-radius: 12px;
     background-color: #222;
+    width: 100%;
+    aspect-ratio: 1 / 1;
 }
 
 .attachment-image {
     display: block;
-    width: 180px;
-    height: 180px;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
     cursor: pointer;
     transition: transform 0.2s ease;
@@ -501,19 +498,15 @@ body.chat-layout {
     transform: scale(1.05);
 }
 
-.message-attachments.grid-2 .attachment-image {
-    width: 160px;
-    height: 160px;
+/* Keep single image larger while still constrained by the message area */
+.message-attachments.single-image .attachment-image-wrapper {
+    max-width: 260px;
 }
 
-.message-attachments.grid-3 .attachment-image {
-    width: 140px;
-    height: 140px;
-}
-
-.message-attachments.grid-4 .attachment-image {
-    width: 120px;
-    height: 120px;
+@media (max-width: 576px) {
+    .message-attachments.multi-image {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 .image-count-label {
@@ -521,6 +514,77 @@ body.chat-layout {
     font-size: 12px;
     margin-top: 8px;
     padding: 0 4px;
+}
+
+/* ===== MESSAGE IMAGE LIGHTBOX ===== */
+.message-lightbox {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.86);
+    z-index: 9999;
+    padding: 16px;
+}
+
+.message-lightbox.open {
+    display: flex;
+}
+
+.message-lightbox-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.message-lightbox-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    user-select: none;
+}
+
+.message-lightbox-close,
+.message-lightbox-nav {
+    position: absolute;
+    border: none;
+    background: rgba(20, 20, 20, 0.72);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.message-lightbox-close {
+    top: 12px;
+    right: 12px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    font-size: 24px;
+    line-height: 1;
+}
+
+.message-lightbox-nav {
+    top: 50%;
+    transform: translateY(-50%);
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    font-size: 34px;
+}
+
+.message-lightbox-prev {
+    left: 12px;
+}
+
+.message-lightbox-next {
+    right: 12px;
 }
 
 .empty-messages {

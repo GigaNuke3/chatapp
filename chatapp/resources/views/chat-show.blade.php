@@ -92,9 +92,15 @@
         <!-- Messages Area -->
         <div class="messages-container" id="messagesContainer">
             @forelse($messages as $message)
-                <div class="message-row {{ $message->sender_id == auth()->id() ? 'sent' : 'received' }}">
-                    <div class="message-wrapper {{ $message->sender_id == auth()->id() ? 'sent' : '' }}">
-                        @if($message->sender_id != auth()->id())
+                @php
+                    $isOwn = $message->sender_id === auth()->id();
+                    $sideClass = $isOwn ? 'sent' : 'received';
+                    $attachments = $message->attachment ? json_decode($message->attachment, true) : [];
+                    $imageCount = count($attachments);
+                @endphp
+                <div class="message-row {{ $sideClass }}">
+                    <div class="message-wrapper {{ $sideClass }}">
+                        @if(!$isOwn)
                             @if($message->sender->avatar)
                                 <img src="{{ asset('storage/' . $message->sender->avatar) }}" alt="{{ $message->sender->name }}" class="message-sender-avatar">
                             @else
@@ -104,18 +110,13 @@
                             @endif
                         @endif
                         
-                        <div class="message-content {{ $message->sender_id == auth()->id() ? 'sent' : 'received' }}">
-                            @php
-                                $attachments = $message->attachment ? json_decode($message->attachment, true) : [];
-                                $imageCount = count($attachments);
-                            @endphp
-                            
+                        <div class="message-content {{ $sideClass }}">
                             @if($message->body)
-                                <div class="message-bubble {{ $message->sender_id == auth()->id() ? 'sent' : 'received' }}">{{ trim($message->body) }}</div>
+                                <div class="message-bubble {{ $sideClass }}">{{ trim($message->body) }}</div>
                             @endif
                             
                             @if($attachments)
-                                <div class="message-attachments {{ $message->sender_id == auth()->id() ? 'sent' : 'received' }} {{ $imageCount > 1 ? 'grid-' . min($imageCount, 4) : '' }}">
+                                <div class="message-attachments {{ $sideClass }} {{ $imageCount > 1 ? 'multi-image' : 'single-image' }}">
                                     @foreach($attachments as $attachment)
                                         <div class="attachment-image-wrapper">
                                             <img src="{{ asset('storage/' . $attachment) }}" alt="Shared image" class="attachment-image" loading="lazy">

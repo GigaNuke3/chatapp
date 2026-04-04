@@ -12,10 +12,15 @@ class MessageController extends Controller
     // Send a message (text or multiple photos)
     public function send(Request $request)
     {
-        $request->validate([
+        \Log::info('FILES received', [
+            'count' => count($request->file('attachments', [])),
+            'all_files' => array_keys($_FILES),
+        ]);
+
+        $validated = $request->validate([
             'receiver_id' => 'required|exists:users,id',
             'body'        => 'nullable|string|max:2000',
-            'attachments' => 'nullable|array',
+            'attachments' => 'nullable|array|max:10',
             'attachments.*' => 'image|mimes:jpg,jpeg,png,gif|max:5120',
         ]);
 
@@ -26,18 +31,28 @@ class MessageController extends Controller
 
         // Handle multiple file uploads
         $attachments = [];
-        if ($request->hasFile('attachments')) {
-            foreach ($request->file('attachments') as $file) {
+        $uploadedFiles = $request->file('attachments', []);
+        if (!is_array($uploadedFiles)) {
+            $uploadedFiles = [$uploadedFiles];
+        }
+
+        foreach ($uploadedFiles as $file) {
+            if ($file) {
                 $attachments[] = $file->store('chat/photos', 'public');
             }
         }
+
+        \Log::info('FILES processed', [
+            'received_count' => is_array($uploadedFiles) ? count($uploadedFiles) : 0,
+            'stored_count' => count($attachments),
+        ]);
 
         $attachmentData = !empty($attachments) ? json_encode($attachments) : null;
 
         $message = Message::create([
             'sender_id'   => auth()->id(),
-            'receiver_id' => $request->receiver_id,
-            'body'        => $request->body ?: null,
+            'receiver_id' => $validated['receiver_id'],
+            'body'        => $validated['body'] ?? null,
             'attachment'  => $attachmentData,
             'is_read'     => false,
         ]);
