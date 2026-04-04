@@ -98,7 +98,7 @@
                     $attachments = $message->attachment ? json_decode($message->attachment, true) : [];
                     $imageCount = count($attachments);
                 @endphp
-                <div class="message-row {{ $sideClass }}">
+                <div class="message-row {{ $sideClass }}" id="message-{{ $message->id }}" data-message-id="{{ $message->id }}">
                     <div class="message-wrapper {{ $sideClass }}">
                         @if(!$isOwn)
                             @if($message->sender->avatar)
@@ -132,6 +132,9 @@
                             
                             <div class="message-time" data-utc-time="{{ $message->created_at->utc()->toIso8601String() }}">
                                 {{ $message->created_at->format('g:i A') }}
+                                @if($isOwn)
+                                    <span class="message-status" data-message-status-id="{{ $message->id }}">{{ $message->is_read ? 'Seen' : 'Delivered' }}</span>
+                                @endif
                             </div>
                         </div>
                     </div>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\MessageRead;
 use App\Events\MessageSent;
 use App\Models\Message;
 use App\Models\User;
@@ -76,13 +77,24 @@ class MessageController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
 
-        // Mark messages as read
-        Message::where('sender_id', $user->id)
-            ->where('receiver_id', Auth::id())
-            ->where('is_read', false)
-            ->update(['is_read' => true]);
+        $this->markMessagesAsReadForConversation($user);
 
         return response()->json($messages);
+    }
+
+    public function markRead(User $user)
+    {
+        // Prevent marking own messages as read
+        if ($user->id === Auth::id()) {
+            return response()->json(['error' => 'Invalid user'], 400);
+        }
+
+        $readMessageIds = $this->markMessagesAsReadForConversation($user);
+
+        return response()->json([
+            'success' => true,
+            'message_ids' => $readMessageIds,
+        ]);
     }
 
     // Delete a single message
@@ -112,5 +124,25 @@ class MessageController extends Controller
             ->delete();
 
         return response()->json(['success' => true]);
+    }
+
+    protected function markMessagesAsReadForConversation(User $user): array
+    {
+        $unreadMessageIds = Message::where('sender_id', $user->id)
+            ->where('receiver_id', Auth::id())
+            ->where('is_read', false)
+            ->pluck('id')
+            ->map(static fn ($id) => (int) $id)
+            ->all();
+
+        if (empty($unreadMessageIds)) {
+            return [];
+        }
+
+        Message::whereIn('id', $unreadMessageIds)->update(['is_read' => true]);
+
+        broadcast(new MessageRead($user->id, Auth::id(), $unreadMessageIds));
+
+        return $unreadMessageIds;
     }
 }

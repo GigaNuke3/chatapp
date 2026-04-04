@@ -29,6 +29,7 @@ function initializeChat() {
     setupAttachmentPreviewControls();
     setupMessageImageLightbox();
     setupRealtimeMessages();
+    markConversationAsRead();
 }
 
 /**
@@ -55,7 +56,48 @@ function setupRealtimeMessages() {
         .listen('MessageSent', (event) => {
             if (Number(event.sender_id) !== activeChatUserId) return;
             appendMessageToChat(event, false);
+            markConversationAsRead();
+        })
+        .listen('.MessageRead', (event) => {
+            if (Number(event.reader_id) !== activeChatUserId) return;
+            if (!Array.isArray(event.message_ids)) return;
+
+            event.message_ids.forEach((messageId) => {
+                updateMessageReadStatus(messageId, true);
+            });
         });
+}
+
+/**
+ * Mark all incoming messages in the active conversation as read
+ */
+async function markConversationAsRead() {
+    const messagesContainer = document.getElementById('messagesContainer');
+    if (!messagesContainer) return;
+
+    const chatUserId = messagesContainer.dataset.chatUserId;
+    if (!chatUserId) return;
+
+    const csrfToken = document.querySelector('input[name="_token"]')?.value;
+    if (!csrfToken) return;
+
+    const headers = {
+        'X-CSRF-TOKEN': csrfToken,
+    };
+
+    const socketId = window.Echo?.socketId?.();
+    if (socketId) {
+        headers['X-Socket-ID'] = socketId;
+    }
+
+    try {
+        await fetch(route('message.read', { userId: chatUserId }), {
+            method: 'POST',
+            headers,
+        });
+    } catch (_) {
+        // Fail silently; read status will sync on next successful request.
+    }
 }
 
 /**
@@ -127,6 +169,7 @@ function appendMessageToChat(message, isOwnMessage) {
     const safeBody = typeof message.body === 'string' ? message.body.trim() : '';
     const imageCount = attachmentUrls.length;
     const createdAt = message.created_at || new Date().toISOString();
+    const statusLabel = isOwnMessage && message.is_read ? 'Seen' : 'Delivered';
 
     const avatarHtml = !isOwnMessage
         ? (message.sender?.avatar
@@ -152,13 +195,17 @@ function appendMessageToChat(message, isOwnMessage) {
     const messageRow = document.createElement('div');
     messageRow.id = `message-${message.id}`;
     messageRow.className = `message-row ${sideClass}`;
+    messageRow.dataset.messageId = String(message.id);
     messageRow.innerHTML = `
         <div class="message-wrapper ${sideClass}">
             ${avatarHtml}
             <div class="message-content ${sideClass}">
                 ${bodyHtml}
                 ${attachmentsHtml}
-                <div class="message-time" data-utc-time="${createdAt}">${formatMessageTime(createdAt)}</div>
+                <div class="message-time" data-utc-time="${createdAt}">
+                    ${formatMessageTime(createdAt)}
+                    ${isOwnMessage ? `<span class="message-status" data-message-status-id="${message.id}">${statusLabel}</span>` : ''}
+                </div>
             </div>
         </div>
     `;
@@ -170,6 +217,16 @@ function appendMessageToChat(message, isOwnMessage) {
 
     messagesContainer.appendChild(messageRow);
     autoScrollMessages();
+}
+
+/**
+ * Update delivered/seen status label for a specific sent message
+ */
+function updateMessageReadStatus(messageId, isRead) {
+    const statusElement = document.querySelector(`[data-message-status-id="${messageId}"]`);
+    if (!statusElement) return;
+
+    statusElement.textContent = isRead ? 'Seen' : 'Delivered';
 }
 
 /**
@@ -685,7 +742,16 @@ function showNotification(message, type = 'info') {
  */
 function route(routeName) {
     const routes = {
-        'message.send': '/api/messages'
+        'message.send': '/api/messages',
+        'message.read': '/api/messages/{userId}/read',
     };
-    return routes[routeName] || '/';
+
+    let url = routes[routeName] || '/';
+    const params = arguments[1] || {};
+
+    Object.entries(params).forEach(([key, value]) => {
+        url = url.replace(`{${key}}`, encodeURIComponent(String(value)));
+    });
+
+    return url;
 }
