@@ -90,7 +90,7 @@
         </div>
 
         <!-- Messages Area -->
-        <div class="messages-container" id="messagesContainer">
+        <div class="messages-container" id="messagesContainer" data-current-user-id="{{ auth()->id() }}" data-chat-user-id="{{ $user->id }}">
             @forelse($messages as $message)
                 @php
                     $isOwn = $message->sender_id === auth()->id();

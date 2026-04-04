@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 let selectedAttachmentFiles = [];
 const MAX_ATTACHMENTS_PER_MESSAGE = 10;
+let activeChatChannelName = null;
 let messageLightboxState = {
     images: [],
     currentIndex: 0,
@@ -27,6 +28,148 @@ function initializeChat() {
     setupAttachmentButton();
     setupAttachmentPreviewControls();
     setupMessageImageLightbox();
+    setupRealtimeMessages();
+}
+
+/**
+ * Subscribe to realtime chat events for the logged-in user
+ */
+function setupRealtimeMessages() {
+    const messagesContainer = document.getElementById('messagesContainer');
+    if (!messagesContainer || !window.Echo) return;
+
+    const currentUserId = Number(messagesContainer.dataset.currentUserId);
+    const activeChatUserId = Number(messagesContainer.dataset.chatUserId);
+    if (!currentUserId || !activeChatUserId) return;
+
+    const channelName = `chat.${currentUserId}`;
+    if (activeChatChannelName === channelName) return;
+
+    if (activeChatChannelName) {
+        window.Echo.leave(activeChatChannelName);
+    }
+
+    activeChatChannelName = channelName;
+
+    window.Echo.private(channelName)
+        .listen('MessageSent', (event) => {
+            if (Number(event.sender_id) !== activeChatUserId) return;
+            appendMessageToChat(event, false);
+        });
+}
+
+/**
+ * Build full attachment URLs from message payload variants
+ */
+function getAttachmentUrlsFromMessage(message) {
+    if (Array.isArray(message.attachment_urls)) {
+        return message.attachment_urls;
+    }
+
+    let attachmentPaths = [];
+
+    if (Array.isArray(message.attachment_paths)) {
+        attachmentPaths = message.attachment_paths;
+    } else if (Array.isArray(message.attachment)) {
+        attachmentPaths = message.attachment;
+    } else if (typeof message.attachment === 'string' && message.attachment.length > 0) {
+        try {
+            const parsed = JSON.parse(message.attachment);
+            if (Array.isArray(parsed)) {
+                attachmentPaths = parsed;
+            }
+        } catch (_) {
+            if (message.attachment.startsWith('http')) {
+                return [message.attachment];
+            }
+            attachmentPaths = [message.attachment];
+        }
+    }
+
+    return attachmentPaths.map(path => path.startsWith('http') ? path : `/storage/${path}`);
+}
+
+/**
+ * Escape raw text before inserting into HTML
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+/**
+ * Format timestamp to local 12-hour display
+ */
+function formatMessageTime(createdAt) {
+    const parsedDate = new Date(createdAt);
+    if (Number.isNaN(parsedDate.getTime())) return '';
+
+    return new Intl.DateTimeFormat(undefined, {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+    }).format(parsedDate);
+}
+
+/**
+ * Append a single message to the current chat thread
+ */
+function appendMessageToChat(message, isOwnMessage) {
+    const messagesContainer = document.getElementById('messagesContainer');
+    if (!messagesContainer) return;
+
+    const existingMessage = document.getElementById(`message-${message.id}`);
+    if (existingMessage) return;
+
+    const sideClass = isOwnMessage ? 'sent' : 'received';
+    const attachmentUrls = getAttachmentUrlsFromMessage(message);
+    const safeBody = typeof message.body === 'string' ? message.body.trim() : '';
+    const imageCount = attachmentUrls.length;
+    const createdAt = message.created_at || new Date().toISOString();
+
+    const avatarHtml = !isOwnMessage
+        ? (message.sender?.avatar
+            ? `<img src="${message.sender.avatar}" alt="${escapeHtml(message.sender?.name || 'User')}" class="message-sender-avatar">`
+            : `<div class="message-sender-placeholder">${escapeHtml((message.sender?.name || 'U').charAt(0).toUpperCase())}</div>`)
+        : '';
+
+    const bodyHtml = safeBody
+        ? `<div class="message-bubble ${sideClass}">${escapeHtml(safeBody)}</div>`
+        : '';
+
+    const attachmentsHtml = imageCount > 0
+        ? `<div class="message-attachments ${sideClass} ${imageCount > 1 ? 'multi-image' : 'single-image'}">
+                ${attachmentUrls.map((url) => `
+                    <div class="attachment-image-wrapper">
+                        <img src="${url}" alt="Shared image" class="attachment-image" loading="lazy">
+                    </div>
+                `).join('')}
+           </div>
+           ${imageCount > 1 ? `<div class="image-count-label">${imageCount} images</div>` : ''}`
+        : '';
+
+    const messageRow = document.createElement('div');
+    messageRow.id = `message-${message.id}`;
+    messageRow.className = `message-row ${sideClass}`;
+    messageRow.innerHTML = `
+        <div class="message-wrapper ${sideClass}">
+            ${avatarHtml}
+            <div class="message-content ${sideClass}">
+                ${bodyHtml}
+                ${attachmentsHtml}
+                <div class="message-time" data-utc-time="${createdAt}">${formatMessageTime(createdAt)}</div>
+            </div>
+        </div>
+    `;
+
+    const emptyMessages = messagesContainer.querySelector('.empty-messages');
+    if (emptyMessages) {
+        emptyMessages.remove();
+    }
+
+    messagesContainer.appendChild(messageRow);
+    autoScrollMessages();
 }
 
 /**
@@ -298,6 +441,9 @@ async function handleMessageSubmit(e) {
         });
 
         if (response.ok) {
+            const sentMessage = await response.json();
+            appendMessageToChat(sentMessage, true);
+
             messageInput.value = '';
             messageInput.placeholder = 'Type a message...';
             messageInput.dataset.hasFiles = 'false';
@@ -306,7 +452,6 @@ async function handleMessageSubmit(e) {
             selectedAttachmentFiles = [];
             renderAttachmentPreviews();
             messageInput.focus();
-            window.location.reload();
         } else {
             let errorMessage = 'Failed to send message';
 
