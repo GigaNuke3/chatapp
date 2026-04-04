@@ -39,12 +39,12 @@
                                 {{ substr($u->name, 0, 1) }}
                             </div>
                         @endif
-                        <div class="avatar-status"></div>
+                        <div class="avatar-status {{ in_array($u->id, $onlineUserIds ?? [], true) ? 'online' : 'offline' }}"></div>
                     </div>
 
                     <div class="user-info">
                         <h6>{{ $u->name }}</h6>
-                        <p>Active now</p>
+                        <p>{{ in_array($u->id, $onlineUserIds ?? [], true) ? 'Active now' : 'Offline' }}</p>
                     </div>
                 </a>
             @empty
@@ -71,8 +71,8 @@
                 <div class="chat-header-user-info">
                     <h5>{{ $user->name }}</h5>
                     <p>
-                        <i class="fas fa-circle status-indicator"></i>
-                        Active now
+                        <i class="fas fa-circle status-indicator {{ ($isSelectedUserOnline ?? false) ? 'online' : 'offline' }}"></i>
+                        {{ ($isSelectedUserOnline ?? false) ? 'Active now' : 'Offline' }}
                     </p>
                 </div>
             </div>

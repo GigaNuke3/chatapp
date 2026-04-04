@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\MessageController;
 use App\Models\User;
 use App\Models\Message;
@@ -19,7 +20,20 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware('auth')->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+$getOnlineUserIds = static function (): array {
+    $activeSinceTimestamp = now()->subMinutes((int) config('session.lifetime'))->getTimestamp();
+
+    return DB::table(config('session.table', 'sessions'))
+        ->whereNotNull('user_id')
+        ->where('last_activity', '>=', $activeSinceTimestamp)
+        ->pluck('user_id')
+        ->map(static fn ($id) => (int) $id)
+        ->unique()
+        ->values()
+        ->all();
+};
+
+Route::middleware('auth')->group(function () use ($getOnlineUserIds) {
     // Chat pages
     Route::get('/chat', function () {
         $users = User::where('id', '!=', Auth::id())->get();
@@ -31,13 +45,15 @@ Route::middleware('auth')->group(function () {
         return redirect()->route('chat.show', $users->first());
     })->name('chat.index');
 
-    Route::get('/chat/{user}', function (User $user) {
+    Route::get('/chat/{user}', function (User $user) use ($getOnlineUserIds) {
         // Prevent user from viewing their own chat
         if ($user->id === Auth::id()) {
             return redirect()->route('chat.index');
         }
 
         $users = User::where('id', '!=', Auth::id())->get();
+        $onlineUserIds = $getOnlineUserIds();
+        $isSelectedUserOnline = in_array($user->id, $onlineUserIds, true);
         $messages = Message::where(function ($q) use ($user) {
                 $q->where('sender_id', Auth::id())
                   ->where('receiver_id', $user->id);
@@ -50,7 +66,7 @@ Route::middleware('auth')->group(function () {
             ->orderBy('created_at', 'asc')
             ->get();
 
-        return view('chat-show', compact('users', 'user', 'messages'));
+        return view('chat-show', compact('users', 'user', 'messages', 'onlineUserIds', 'isSelectedUserOnline'));
     })->name('chat.show');
 
     // API routes for messages

@@ -234,6 +234,11 @@ body.chat-layout {
     border: 2px solid #2d2d2d;
 }
 
+.avatar-status.offline {
+    display: block;
+    background-color: #666;
+}
+
 .user-info h6 {
     margin: 0 0 4px 0;
     color: #fff;
@@ -307,9 +312,16 @@ body.chat-layout {
 }
 
 .status-indicator {
-    color: #28a745;
     font-size: 8px;
     margin-right: 5px;
+}
+
+.status-indicator.online {
+    color: #28a745;
+}
+
+.status-indicator.offline {
+    color: #666;
 }
 
 .chat-header-actions {
