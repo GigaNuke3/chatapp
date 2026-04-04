@@ -161,6 +161,9 @@
                     <button type="button" class="action-btn" id="attachmentBtn" title="Attach media">
                         <i class="fas fa-photo-film"></i>
                     </button>
+                    <button type="button" class="action-btn" id="gifBtn" title="Attach GIF">
+                        GIF
+                    </button>
                 </div>
 
                 <div id="preview-container" aria-live="polite">

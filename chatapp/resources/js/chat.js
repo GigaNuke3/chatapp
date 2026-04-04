@@ -547,16 +547,29 @@ function setupUserSearch() {
  */
 function setupAttachmentButton() {
     const attachmentBtn = document.getElementById('attachmentBtn');
+    const gifBtn = document.getElementById('gifBtn');
     const fileInput = document.getElementById('fileInput');
 
     if (!attachmentBtn || !fileInput) return;
 
     attachmentBtn.addEventListener('click', function(e) {
         e.preventDefault();
+        fileInput.accept = 'image/*';
         fileInput.click();
     });
 
-    fileInput.addEventListener('change', handleFileSelection);
+    if (gifBtn) {
+        gifBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            fileInput.accept = 'image/gif';
+            fileInput.click();
+        });
+    }
+
+    fileInput.addEventListener('change', function(event) {
+        handleFileSelection(event);
+        fileInput.accept = 'image/*';
+    });
 }
 
 /**
