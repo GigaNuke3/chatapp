@@ -423,10 +423,12 @@ body.chat-layout {
 
 .message-content.sent {
     text-align: right;
+    align-items: flex-end;
 }
 
 .message-content.received {
     text-align: left;
+    align-items: flex-start;
 }
 
 .message-bubble {
@@ -468,8 +470,16 @@ body.chat-layout {
     gap: 8px;
     margin-top: 10px;
     max-width: 100%;
-    width: 100%;
+    width: fit-content;
     overflow: hidden;
+}
+
+.message-content.sent .message-attachments {
+    align-self: flex-end;
+}
+
+.message-content.received .message-attachments {
+    align-self: flex-start;
 }
 
 .message-attachments.multi-image {

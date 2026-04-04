@@ -29,5 +29,7 @@ return function () {
     }
     
     echo "\nUsers in database:\n";
-    User::all(['id', 'name', 'email'])->each(fn($u) => echo "  [{$u->id}] {$u->name} ({$u->email})\n");
+    foreach (User::all(['id', 'name', 'email']) as $user) {
+        echo "  [{$user->id}] {$user->name} ({$user->email})\n";
+    }
 };

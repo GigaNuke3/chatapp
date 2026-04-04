@@ -1,9 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\MessageController;
 use App\Models\User;
 use App\Models\Message;
+
+Route::view('/', 'auth.login')->name('home');
 
 //Login Routes 
 Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
@@ -19,24 +22,29 @@ Route::get('/dashboard', function () {
 Route::middleware('auth')->group(function () {
     // Chat pages
     Route::get('/chat', function () {
-        $users = User::where('id', '!=', auth()->id())->get();
-        return view('chat', compact('users'));
+        $users = User::where('id', '!=', Auth::id())->get();
+
+        if ($users->isEmpty()) {
+            return redirect()->route('dashboard');
+        }
+
+        return redirect()->route('chat.show', $users->first());
     })->name('chat.index');
 
     Route::get('/chat/{user}', function (User $user) {
         // Prevent user from viewing their own chat
-        if ($user->id == auth()->id()) {
+        if ($user->id === Auth::id()) {
             return redirect()->route('chat.index');
         }
 
-        $users = User::where('id', '!=', auth()->id())->get();
+        $users = User::where('id', '!=', Auth::id())->get();
         $messages = Message::where(function ($q) use ($user) {
-                $q->where('sender_id', auth()->id())
+                $q->where('sender_id', Auth::id())
                   ->where('receiver_id', $user->id);
             })
             ->orWhere(function ($q) use ($user) {
                 $q->where('sender_id', $user->id)
-                  ->where('receiver_id', auth()->id());
+                  ->where('receiver_id', Auth::id());
             })
             ->with('sender', 'receiver')
             ->orderBy('created_at', 'asc')
