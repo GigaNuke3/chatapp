@@ -15,6 +15,7 @@ class User extends Authenticatable
         'email',
         'password',
         'avatar',
+        'bio',
     ];
 
     protected $hidden = [
@@ -47,8 +48,9 @@ class User extends Authenticatable
     public function getAvatarUrl()
     {
         if ($this->avatar) {
-            return asset('storage/' . $this->avatar);
+            return asset('storage/'.$this->avatar);
         }
+
         return null;
     }
 

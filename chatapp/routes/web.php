@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ProfileController;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -36,6 +37,9 @@ $getOnlineUserIds = static function (): array {
 };
 
 Route::middleware('auth')->group(function () use ($getOnlineUserIds) {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
     // Chat pages
     Route::get('/chat', function () {
         $users = User::where('id', '!=', Auth::id())->get();

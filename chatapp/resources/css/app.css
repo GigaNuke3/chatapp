@@ -144,12 +144,52 @@ body.chat-layout {
     border-bottom: 1px solid #444;
 }
 
+.sidebar-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
 .sidebar-header h5 {
     margin: 0;
     color: #fff;
     display: flex;
     align-items: center;
     gap: 10px;
+}
+
+.sidebar-profile-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    text-decoration: none;
+}
+
+.sidebar-profile-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #5d5d5d;
+}
+
+.sidebar-profile-initial {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #5f7cf5 0%, #55b6d9 100%);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    border: 2px solid #5d5d5d;
+    text-transform: uppercase;
 }
 
 .search-box {

@@ -8,10 +8,20 @@
     <div class="chat-sidebar">
         <!-- Sidebar Header -->
         <div class="sidebar-header">
-            <h5>
-                <i class="fas fa-comments"></i>
-                Messages
-            </h5>
+            <div class="sidebar-header-top">
+                <h5>
+                    <i class="fas fa-comments"></i>
+                    Messages
+                </h5>
+
+                <a href="{{ route('profile.edit') }}" class="sidebar-profile-link" title="My Profile" aria-label="Open my profile settings">
+                    @if(auth()->user()->avatar)
+                        <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="{{ auth()->user()->name }}" class="sidebar-profile-avatar">
+                    @else
+                        <span class="sidebar-profile-initial">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
+                    @endif
+                </a>
+            </div>
         </div>
 
         <!-- Search Box -->

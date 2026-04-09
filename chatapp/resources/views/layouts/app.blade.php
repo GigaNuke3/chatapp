@@ -59,6 +59,37 @@
             border-color: #c85555;
             color: #ff9999;
         }
+        .profile-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            margin-left: 8px;
+        }
+        .profile-link:hover {
+            text-decoration: none;
+        }
+        .profile-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #555;
+        }
+        .profile-avatar-initial {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #5f7cf5 0%, #55b6d9 100%);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            border: 2px solid #555;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 @php($isChatPage = request()->routeIs('chat*'))
@@ -74,6 +105,15 @@
                     @auth
                         <li class="nav-item">
                             <a class="nav-link" href="/dashboard" style="color: #ccc;">Dashboard</a>
+                        </li>
+                        <li class="nav-item d-flex align-items-center">
+                            <a href="{{ route('profile.edit') }}" class="profile-link" title="My Profile" aria-label="Open profile settings">
+                                @if(auth()->user()->avatar)
+                                    <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="{{ auth()->user()->name }}" class="profile-avatar">
+                                @else
+                                    <span class="profile-avatar-initial">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
+                                @endif
+                            </a>
                         </li>
                         <li class="nav-item">
                             <form method="POST" action="{{ route('logout') }}" style="display:inline;">
