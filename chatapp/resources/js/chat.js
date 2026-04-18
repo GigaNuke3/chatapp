@@ -30,6 +30,7 @@ function initializeChat() {
     setupMessageImageLightbox();
     setupRealtimeMessages();
     markConversationAsRead();
+    setupSidebarToggle();
 }
 
 /**
@@ -767,4 +768,29 @@ function route(routeName) {
     });
 
     return url;
+}
+
+/**
+ * Setup sidebar toggle functionality
+ */
+function setupSidebarToggle() {
+    const toggleBtn = document.getElementById('sidebarToggle');
+    const sidebar = document.querySelector('.chat-sidebar');
+    
+    if (!toggleBtn || !sidebar) return;
+    
+    // Load saved state from localStorage
+    const isSidebarHidden = localStorage.getItem('sidebar-hidden') === 'true';
+    if (isSidebarHidden) {
+        sidebar.classList.add('hidden');
+    }
+    
+    toggleBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        sidebar.classList.toggle('hidden');
+        
+        // Save state to localStorage
+        const isHidden = sidebar.classList.contains('hidden');
+        localStorage.setItem('sidebar-hidden', isHidden);
+    });
 }

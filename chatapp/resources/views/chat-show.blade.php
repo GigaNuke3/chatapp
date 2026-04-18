@@ -4,6 +4,13 @@
 
 @section('content')
 <div class="chat-container">
+    <!-- Icon Sidebar - Menu Toggle -->
+    <div class="icon-sidebar">
+        <button id="sidebarToggle" class="sidebar-toggle-btn" title="Toggle sidebar" aria-label="Toggle sidebar menu">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
     <!-- Sidebar - Users List -->
     <div class="chat-sidebar">
         <!-- Sidebar Header -->
@@ -15,11 +22,7 @@
                 </h5>
 
                 <a href="{{ route('profile.edit') }}" class="sidebar-profile-link" title="My Profile" aria-label="Open my profile settings">
-                    @if(auth()->user()->avatar)
-                        <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="{{ auth()->user()->name }}" class="sidebar-profile-avatar">
-                    @else
-                        <span class="sidebar-profile-initial">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
-                    @endif
+                    <x-avatar :user="auth()->user()" size="sidebar" />
                 </a>
             </div>
         </div>
@@ -42,14 +45,7 @@
                    data-user-name="{{ $u->name }}">
                     
                     <div class="avatar-container">
-                        @if($u->avatar)
-                            <img src="{{ asset('storage/' . $u->avatar) }}" alt="{{ $u->name }}" class="avatar-container img">
-                        @else
-                            <div class="avatar-placeholder">
-                                {{ substr($u->name, 0, 1) }}
-                            </div>
-                        @endif
-                        <div class="avatar-status {{ in_array($u->id, $onlineUserIds ?? [], true) ? 'online' : 'offline' }}"></div>
+                        <x-avatar :user="$u" size="md" :showStatus="true" :statusOnline="in_array($u->id, $onlineUserIds ?? [], true)" />
                     </div>
 
                     <div class="user-info">
@@ -71,13 +67,7 @@
         <!-- Chat Header -->
         <div class="chat-header">
             <div class="chat-header-user">
-                @if($user->avatar)
-                    <img src="{{ asset('storage/' . $user->avatar) }}" alt="{{ $user->name }}">
-                @else
-                    <div class="avatar-placeholder">
-                        {{ substr($user->name, 0, 1) }}
-                    </div>
-                @endif
+                <x-avatar :user="$user" size="lg" />
                 <div class="chat-header-user-info">
                     <h5>{{ $user->name }}</h5>
                     <p>
@@ -85,17 +75,6 @@
                         {{ ($isSelectedUserOnline ?? false) ? 'Active now' : 'Offline' }}
                     </p>
                 </div>
-            </div>
-            <div class="chat-header-actions">
-                <button class="action-btn" title="Call">
-                    <i class="fas fa-phone"></i>
-                </button>
-                <button class="action-btn" title="Video Call">
-                    <i class="fas fa-video"></i>
-                </button>
-                <button class="action-btn" title="Info">
-                    <i class="fas fa-info-circle"></i>
-                </button>
             </div>
         </div>
 
@@ -111,13 +90,7 @@
                 <div class="message-row {{ $sideClass }}" id="message-{{ $message->id }}" data-message-id="{{ $message->id }}">
                     <div class="message-wrapper {{ $sideClass }}">
                         @if(!$isOwn)
-                            @if($message->sender->avatar)
-                                <img src="{{ asset('storage/' . $message->sender->avatar) }}" alt="{{ $message->sender->name }}" class="message-sender-avatar">
-                            @else
-                                <div class="message-sender-placeholder">
-                                    {{ substr($message->sender->name, 0, 1) }}
-                                </div>
-                            @endif
+                            <x-avatar :user="$message->sender" size="md" />
                         @endif
                         
                         <div class="message-content {{ $sideClass }}">

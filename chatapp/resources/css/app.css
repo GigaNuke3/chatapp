@@ -128,6 +128,44 @@ body.chat-layout {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
+/* Icon Sidebar - Menu Toggle */
+.icon-sidebar {
+    width: 60px;
+    background-color: #252525;
+    border-right: 1px solid #444;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 12px 0;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.sidebar-toggle-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background-color: #3d3d3d;
+    border: 1px solid #555;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: all 0.3s ease;
+}
+
+.sidebar-toggle-btn:hover {
+    background-color: #4d4d4d;
+    border-color: #666;
+}
+
+.sidebar-toggle-btn:active {
+    transform: scale(0.95);
+}
+
 /* Sidebar Styles */
 .chat-sidebar {
     width: 280px;
@@ -137,6 +175,14 @@ body.chat-layout {
     flex-direction: column;
     overflow: hidden;
     min-height: 0;
+    transition: transform 0.3s ease, visibility 0.3s ease;
+}
+
+.chat-sidebar.hidden {
+    transform: translateX(-100%);
+    visibility: hidden;
+    position: absolute;
+    left: 60px;
 }
 
 .sidebar-header {
