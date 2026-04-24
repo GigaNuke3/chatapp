@@ -9,6 +9,50 @@
         <button id="sidebarToggle" class="sidebar-toggle-btn" title="Toggle sidebar" aria-label="Toggle sidebar menu">
             <i class="fas fa-bars"></i>
         </button>
+
+          <a href="{{ route('profile.edit') }}" class="sidebar-profile-link" title="My Profile" aria-label="Open my profile settings">
+            <x-avatar :user="auth()->user()" size="sidebar" />
+        </a>
+
+        <div class="settings-dropdown">
+            <button id="darkModeToggle" class="dark-mode-toggle-btn" title="Toggle dark/light mode" aria-label="Toggle dark/light mode" aria-pressed="true">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+
+        <div class="app-settings-dropdown">
+            <button id="appSettingsToggle" class="app-settings-btn" title="Settings" aria-label="Open app settings" aria-expanded="false">
+                <i class="fas fa-gear"></i>
+            </button>
+            <div class="app-settings-menu" id="appSettingsMenu" role="menu" style="display: none;">
+                <div class="app-settings-menu-header">Settings</div>
+                
+                <div class="app-settings-section">
+                    <label class="app-settings-label">Theme</label>
+                    <div class="theme-options">
+                        <button class="theme-option-btn dark-theme-btn" data-theme="dark" title="Dark Mode">
+                            <i class="fas fa-moon"></i> Dark
+                        </button>
+                        <button class="theme-option-btn light-theme-btn" data-theme="light" title="Light Mode">
+                            <i class="fas fa-sun"></i> Light
+                        </button>
+                    </div>
+                </div>
+
+                <div class="app-settings-divider"></div>
+
+                <a href="{{ route('profile.edit') }}" class="app-settings-menu-item">
+                    <i class="fas fa-user"></i> My Profile
+                </a>
+
+                <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
+                    @csrf
+                    <button type="submit" class="app-settings-menu-item logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 
     <!-- Sidebar - Users List -->
@@ -20,10 +64,6 @@
                     <i class="fas fa-comments"></i>
                     Messages
                 </h5>
-
-                <a href="{{ route('profile.edit') }}" class="sidebar-profile-link" title="My Profile" aria-label="Open my profile settings">
-                    <x-avatar :user="auth()->user()" size="sidebar" />
-                </a>
             </div>
         </div>
 

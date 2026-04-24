@@ -3,7 +3,102 @@
  * Handles message sending, user search, and auto-scroll functionality
  */
 
+/**
+ * Update CSS variables for dark/light mode
+ * isDarkMode: true = dark mode (frequency 0), false = light mode (frequency 100)
+ */
+function updateThemeVariables(isDarkMode) {
+    const root = document.documentElement;
+    const body = document.body;
+    
+    // Define dark mode colors (RGB)
+    const darkColors = {
+        bgPrimary: [26, 26, 26],           // #1a1a1a
+        bgSecondary: [45, 45, 45],         // #2d2d2d
+        bgTertiary: [61, 61, 61],          // #3d3d3d
+        bgQuaternary: [37, 37, 37],        // #252525
+        textPrimary: [255, 255, 255],      // #ffffff
+        textSecondary: [204, 204, 204],    // #cccccc
+        textTertiary: [153, 153, 153],     // #999999
+        borderColor: [200, 200, 200],      // #c8c8c8 - light borders for dark backgrounds
+    };
+    
+    // Define light mode colors (RGB)
+    const lightColors = {
+        bgPrimary: [248, 249, 250],        // #f8f9fa
+        bgSecondary: [255, 255, 255],      // #ffffff
+        bgTertiary: [233, 236, 239],       // #e9ecef
+        bgQuaternary: [241, 243, 245],     // #f1f3f5
+        textPrimary: [26, 26, 26],         // #1a1a1a
+        textSecondary: [51, 51, 51],       // #333333
+        textTertiary: [102, 102, 102],     // #666666
+        borderColor: [50, 50, 50],         // #323232 - dark borders for light backgrounds
+    };
+    
+    // Adjust brightness based on mode
+    // Dark mode: brightness = 0.85 (dimmed)
+    // Light mode: brightness = 1.5 (bright)
+    const brightness = isDarkMode ? 0.85 : 1.5;
+    
+    const interpolateColor = (colorName) => {
+        const color = isDarkMode ? darkColors[colorName] : lightColors[colorName];
+        return [color[0], color[1], color[2]];
+    };
+    
+    const interpolateColorWithBrightness = (colorName) => {
+        const color = isDarkMode ? darkColors[colorName] : lightColors[colorName];
+        
+        // Apply brightness adjustment ONLY to backgrounds
+        return [
+            Math.round(Math.min(255, color[0] * brightness)),
+            Math.round(Math.min(255, color[1] * brightness)),
+            Math.round(Math.min(255, color[2] * brightness)),
+        ];
+    };
+    
+    const interpolateBorderColor = () => {
+        // Borders are opposite of mode for contrast
+        // Dark mode: use light borders (#c8c8c8)
+        // Light mode: use dark borders (#323232)
+        const color = isDarkMode ? darkColors.borderColor : lightColors.borderColor;
+        
+        // Apply brightness to borders too for consistency
+        return [
+            Math.round(Math.min(255, color[0] * brightness)),
+            Math.round(Math.min(255, color[1] * brightness)),
+            Math.round(Math.min(255, color[2] * brightness)),
+        ];
+    };
+    
+    // Apply interpolated colors to CSS variables
+    // TEXT: No brightness adjustment - stays crisp and readable
+    // BACKGROUNDS: Brightness adjustment applied
+    // BORDERS: Inverted with brightness adjustment
+    const colors = {
+        '--bg-primary': interpolateColorWithBrightness('bgPrimary'),
+        '--bg-secondary': interpolateColorWithBrightness('bgSecondary'),
+        '--bg-tertiary': interpolateColorWithBrightness('bgTertiary'),
+        '--bg-quaternary': interpolateColorWithBrightness('bgQuaternary'),
+        '--text-primary': interpolateColor('textPrimary'),
+        '--text-secondary': interpolateColor('textSecondary'),
+        '--text-tertiary': interpolateColor('textTertiary'),
+        '--border-color': interpolateBorderColor(),
+    };
+    
+    // Set variables on root for global access
+    for (const [key, rgb] of Object.entries(colors)) {
+        const rgbValue = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+        root.style.setProperty(key, rgbValue);
+        // Also set on body as fallback
+        body.style.setProperty(key, rgbValue);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Apply saved theme immediately on page load
+    const savedIsDarkMode = localStorage.getItem('chat-dark-mode') !== 'false';
+    applyDarkMode(savedIsDarkMode);
+    
     initializeChat();
 });
 
@@ -31,6 +126,7 @@ function initializeChat() {
     setupRealtimeMessages();
     markConversationAsRead();
     setupSidebarToggle();
+    setupThemeToggle();
 }
 
 /**
@@ -779,18 +875,191 @@ function setupSidebarToggle() {
     
     if (!toggleBtn || !sidebar) return;
     
-    // Load saved state from localStorage
-    const isSidebarHidden = localStorage.getItem('sidebar-hidden') === 'true';
-    if (isSidebarHidden) {
-        sidebar.classList.add('hidden');
+    // Function to determine if we're on a mobile/tablet view
+    function isMobileView() {
+        return window.innerWidth <= 768;
     }
     
+    // Function to update sidebar visibility based on screen size
+    function updateSidebarForScreenSize() {
+        const savedState = localStorage.getItem('sidebar-hidden');
+        
+        if (isMobileView()) {
+            // On mobile/tablet, respect saved state
+            if (savedState === 'true') {
+                sidebar.classList.add('hidden');
+            } else {
+                sidebar.classList.remove('hidden');
+            }
+        } else {
+            // On desktop, always show sidebar
+            sidebar.classList.remove('hidden');
+            localStorage.setItem('sidebar-hidden', 'false');
+        }
+    }
+    
+    // Initialize on page load
+    updateSidebarForScreenSize();
+    
+    // Handle toggle button click
     toggleBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        sidebar.classList.toggle('hidden');
         
-        // Save state to localStorage
-        const isHidden = sidebar.classList.contains('hidden');
-        localStorage.setItem('sidebar-hidden', isHidden);
+        if (isMobileView()) {
+            sidebar.classList.toggle('hidden');
+            const isHidden = sidebar.classList.contains('hidden');
+            localStorage.setItem('sidebar-hidden', isHidden);
+        }
     });
+    
+    // Handle window resize
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            updateSidebarForScreenSize();
+        }, 250);
+    });
+    
+    // Auto-close sidebar on mobile when user is clicked
+    const userItems = sidebar.querySelectorAll('.user-item');
+    userItems.forEach(item => {
+        item.addEventListener('click', function() {
+            setTimeout(() => {
+                if (isMobileView()) {
+                    sidebar.classList.add('hidden');
+                    localStorage.setItem('sidebar-hidden', 'true');
+                }
+            }, 100);
+        });
+    });
+}
+
+/**
+ * Setup theme frequency slider functionality
+ */
+function setupThemeToggle() {
+    setupDarkModeToggle();
+    setupAppSettingsMenu();
+}
+
+
+/**
+ * Apply dark or light mode
+ */
+function applyDarkMode(isDarkMode) {
+    const body = document.body;
+    
+    // Update class for consistency
+    body.classList.remove('light-mode', 'dark-mode');
+    body.classList.add(isDarkMode ? 'dark-mode' : 'light-mode');
+    
+    // Apply the theme
+    updateThemeVariables(isDarkMode);
+}
+
+/**
+ * Setup dark/light mode toggle
+ */
+function setupDarkModeToggle() {
+    const toggleBtn = document.getElementById('darkModeToggle');
+    if (!toggleBtn) return;
+    
+    // Load saved preference or default to dark mode
+    const savedIsDarkMode = localStorage.getItem('chat-dark-mode') !== 'false';
+    
+    // Apply saved theme on load
+    applyDarkMode(savedIsDarkMode);
+    updateToggleButtonIcon(savedIsDarkMode, toggleBtn);
+    
+    // Add click listener
+    toggleBtn.addEventListener('click', () => {
+        // Get current state from body class
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        const newIsDarkMode = !isDarkMode;
+        
+        // Apply new theme
+        applyDarkMode(newIsDarkMode);
+        updateToggleButtonIcon(newIsDarkMode, toggleBtn);
+        
+        // Save preference
+        localStorage.setItem('chat-dark-mode', newIsDarkMode);
+    });
+}
+
+/**
+ * Update toggle button icon based on mode
+ */
+function updateToggleButtonIcon(isDarkMode, btn) {
+    if (!btn) return;
+    const icon = btn.querySelector('i');
+    if (icon) {
+        icon.className = isDarkMode ? 'fas fa-moon' : 'fas fa-sun';
+    }
+    btn.setAttribute('aria-pressed', isDarkMode);
+}
+
+/**
+ * Setup app settings menu (gear icon)
+ */
+function setupAppSettingsMenu() {
+    const settingsToggle = document.getElementById('appSettingsToggle');
+    const settingsMenu = document.getElementById('appSettingsMenu');
+    const darkThemeBtn = document.querySelector('.dark-theme-btn');
+    const lightThemeBtn = document.querySelector('.light-theme-btn');
+    
+    if (!settingsToggle || !settingsMenu) return;
+    
+    // Get current theme
+    const isDarkMode = localStorage.getItem('chat-dark-mode') !== 'false';
+    updateThemeButtons(isDarkMode, darkThemeBtn, lightThemeBtn);
+    
+    // Toggle menu on gear icon click
+    settingsToggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const isHidden = settingsMenu.style.display === 'none';
+        settingsMenu.style.display = isHidden ? 'block' : 'none';
+        settingsToggle.setAttribute('aria-expanded', isHidden);
+    });
+    
+    // Handle theme button clicks
+    if (darkThemeBtn) {
+        darkThemeBtn.addEventListener('click', () => {
+            applyDarkMode(true);
+            localStorage.setItem('chat-dark-mode', 'true');
+            updateThemeButtons(true, darkThemeBtn, lightThemeBtn);
+            const toggleBtn = document.getElementById('darkModeToggle');
+            updateToggleButtonIcon(true, toggleBtn);
+        });
+    }
+    
+    if (lightThemeBtn) {
+        lightThemeBtn.addEventListener('click', () => {
+            applyDarkMode(false);
+            localStorage.setItem('chat-dark-mode', 'false');
+            updateThemeButtons(false, darkThemeBtn, lightThemeBtn);
+            const toggleBtn = document.getElementById('darkModeToggle');
+            updateToggleButtonIcon(false, toggleBtn);
+        });
+    }
+    
+    // Close menu when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!settingsToggle.contains(e.target) && !settingsMenu.contains(e.target)) {
+            settingsMenu.style.display = 'none';
+            settingsToggle.setAttribute('aria-expanded', 'false');
+        }
+    });
+}
+
+/**
+ * Update theme button active states
+ */
+function updateThemeButtons(isDarkMode, darkBtn, lightBtn) {
+    if (darkBtn) {
+        darkBtn.classList.toggle('active', isDarkMode);
+    }
+    if (lightBtn) {
+        lightBtn.classList.toggle('active', !isDarkMode);
+    }
 }
